@@ -1,73 +1,79 @@
 <?php
-session_start();
-include 'database.php';
-$db = new Database();
-?>
+include_once "Config/Database.php";
+include_once 'App/controllers/ControlBarang.php';
+include_once 'App/controllers/ControlPelanggan.php';
+include_once 'App/controllers/ControlTransaksi.php';
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CRUD OOP PHP!</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  </head>
-  <body>
-    <div class="container mt-3">
-      <h1>CRUD OOP PHP!</h1>
-      <hr>
+// Koneksi ke database
+$dbKoneksi = GetKoneksi();
 
-      <!-- Notifikasi berhasil/gagal -->
-      <?php if (isset($_SESSION['message'])) { ?>
-        <div class="alert alert-<?php echo $_SESSION['message_type']; ?> alert-dismissible fade show" role="alert">
-          <?php echo $_SESSION['message']; ?>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-      <?php
-        unset($_SESSION['message']);
-        unset($_SESSION['message_type']);
-      }
-      ?>
+// Membuat Instance UserController
+$Barang     = new ControlBarang($dbKoneksi);
+$Pelanggan  = new ControlPelanggan($dbKoneksi);
+$Transaksi  = new ControlTransaksi($dbKoneksi);
 
-      <!-- Tombol tambah data -->
-      <a href="input.php" class="btn btn-success btn-sm">Tambah Data</a>
-      <hr>
+// Mendapatkan parameter dari URL menggunakan $_GET
+// Memeriksa apakah parameter 'aksi' ada
+if (isset($_GET['aksi'])) {
+    $aksi = $_GET['aksi'];
 
-      <!-- Tabel untuk menampilkan user -->
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th scope="col">No</th>
-            <th scope="col">Nama</th>
-            <th scope="col">Alamat</th>
-            <th scope="col">No HP</th>
-            <th scope="col">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php
-          $nomor = 1;
-          foreach ($db->tampilData() as $dataUser) {
-          ?>
-            <tr>
-              <th scope="row"><?php echo $nomor++; ?></th>
-              <td><?php echo $dataUser['nama']; ?></td>
-              <td><?php echo $dataUser['alamat']; ?></td>
-              <td><?php echo $dataUser['nohp']; ?></td>
-              <td>
-    <a href="edit.php?id=<?php echo $dataUser['id']; ?>" class="btn btn-warning btn-sm">Edit</a>
-    <a href="proses.php?id=<?php echo $dataUser['id']; ?>&aksi=hapus" 
-       class="btn btn-danger btn-sm" 
-       onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')">Hapus</a>
-    <a href="informasi.php?id=<?php echo $dataUser['id']; ?>" class="btn btn-info btn-sm">Detail</a>
-</td>
+    // Tentukan $id berdasarkan jenis aksi (kd_brg atau id_pel)
+    if (isset($_GET['kd_brg'])){
+        $id = $_GET['kd_brg'];
 
-            </tr>
-          <?php } ?>
-        </tbody>
-      </table>
-    </div>
+    }else if(isset($_GET['id_pel'])){
+        $id = $_GET['id_pel'];
+        
+     }else if(isset($_GET['id_trans'])){
+        $id = $_GET['id_trans'];
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
-</html>
+     }else{
+        null;
+     }
+     
+
+    // Barang
+    if ($aksi == "tambahBarang") {
+        $Barang->nambahBarang();
+
+    } else if ($aksi == "editBarang" && $id) {
+        $Barang->editBarang($id);
+
+    }else if($aksi == "hapusBarang" && $id) {
+        $Barang->hapusBarang($id);
+    }
+
+    // Pelanggan
+     else if ($aksi == "pelanggan") {
+        $Pelanggan->tampilanPelanggan();
+
+    } elseif ($aksi == "tambahPelanggan") {
+        $Pelanggan->nambahPelanggan();
+        
+    }elseif($aksi == "editPelanggan" && $id) {
+        $Pelanggan->editPelanggan($id);
+
+    }else if($aksi == "hapusPelanggan" && $id) {
+        $Pelanggan->hapusPelanggan($id);
+        
+    }   
+
+    // Transaksi
+    else if ($aksi == "Transaksi") {
+        $Transaksi->tampilanTransaksi();
+
+    } elseif ($aksi == "tambahTransaksi") {
+        $Transaksi->nambahTransaksi();
+        
+    // }elseif($aksi == "editTransaksi" && $id) {
+    //     $Transaksi->ubahTransaksi($id);
+
+    }else if($aksi == "hapusTransaksi" && $id) {
+        $Transaksi->hapusTransaksi($id);
+    }else if($aksi == "detailTransaksi" && $id) {
+        $Transaksi->show($id);
+    }   
+
+} else {
+    $Barang->index();
+}
